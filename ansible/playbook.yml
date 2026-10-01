@@ -1,0 +1,24 @@
+---
+- name: Configure Ubuntu EC2 server
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Update apt package cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install basic packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - wget
+          - git
+          - unzip
+          - ca-certificates
+        state: present
+
+  roles:
+    - docker
+    - jenkins

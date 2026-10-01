@@ -1,0 +1,47 @@
+---
+- name: Install Java
+  ansible.builtin.apt:
+    name: openjdk-21-jre
+    state: present
+    update_cache: true
+
+- name: Add Jenkins repository key
+  ansible.builtin.get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+    dest: /usr/share/keyrings/jenkins-keyring.asc
+    mode: "0644"
+
+- name: Add Jenkins repository
+  ansible.builtin.deb822_repository:
+    name: jenkins
+    types:
+      - deb
+    uris:
+      - https://pkg.jenkins.io/debian-stable
+    suites:
+      - binary/
+    signed_by: /usr/share/keyrings/jenkins-keyring.asc
+    state: present
+
+- name: Update apt cache after adding Jenkins repository
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+    state: present
+  notify: Restart Jenkins
+
+- name: Add Jenkins user to Docker group
+  ansible.builtin.user:
+    name: jenkins
+    groups: docker
+    append: yes
+  notify: Restart Jenkins
+
+- name: Ensure Jenkins service is enabled and running
+  ansible.builtin.systemd:
+    name: jenkins
+    enabled: true
+    state: started
